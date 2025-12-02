@@ -225,7 +225,12 @@ const Index = () => {
                 <div className="flex items-center gap-4 p-4 bg-secondary/50 rounded-lg">
                   <div className="text-4xl">{selectedServer.flag}</div>
                   <div className="flex-1">
-                    <h4 className="font-semibold text-lg">{selectedServer.name}</h4>
+                    <h4 className="font-semibold text-lg flex items-center gap-2">
+                      {selectedServer.name}
+                      {selectedServer.isPremium && !hasPremium && (
+                        <Icon name="Lock" size={16} className="text-muted-foreground" />
+                      )}
+                    </h4>
                     <p className="text-sm text-muted-foreground">{selectedServer.country}</p>
                   </div>
                   <div className="text-right">
