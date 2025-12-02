@@ -15,15 +15,16 @@ interface Server {
   flag: string;
   ping: number;
   load: number;
+  isPremium: boolean;
 }
 
 const servers: Server[] = [
-  { id: '1', name: 'Амстердам', country: 'Нидерланды', flag: '🇳🇱', ping: 45, load: 35 },
-  { id: '2', name: 'Нью-Йорк', country: 'США', flag: '🇺🇸', ping: 120, load: 62 },
-  { id: '3', name: 'Токио', country: 'Япония', flag: '🇯🇵', ping: 180, load: 28 },
-  { id: '4', name: 'Лондон', country: 'Великобритания', flag: '🇬🇧', ping: 55, load: 48 },
-  { id: '5', name: 'Сингапур', country: 'Сингапур', flag: '🇸🇬', ping: 200, load: 41 },
-  { id: '6', name: 'Франкфурт', country: 'Германия', flag: '🇩🇪', ping: 40, load: 52 },
+  { id: '1', name: 'Амстердам', country: 'Нидерланды', flag: '🇳🇱', ping: 45, load: 35, isPremium: false },
+  { id: '2', name: 'Нью-Йорк', country: 'США', flag: '🇺🇸', ping: 120, load: 62, isPremium: true },
+  { id: '3', name: 'Токио', country: 'Япония', flag: '🇯🇵', ping: 180, load: 28, isPremium: true },
+  { id: '4', name: 'Лондон', country: 'Великобритания', flag: '🇬🇧', ping: 55, load: 48, isPremium: true },
+  { id: '5', name: 'Сингапур', country: 'Сингапур', flag: '🇸🇬', ping: 200, load: 41, isPremium: true },
+  { id: '6', name: 'Франкфурт', country: 'Германия', flag: '🇩🇪', ping: 40, load: 52, isPremium: false },
 ];
 
 const Index = () => {
@@ -31,6 +32,7 @@ const Index = () => {
   const [selectedServer, setSelectedServer] = useState<Server>(servers[0]);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [hasPremium, setHasPremium] = useState(false);
 
   const handleConnect = () => {
     setIsConnected(!isConnected);
@@ -63,6 +65,14 @@ const Index = () => {
               }`}
             >
               О сервисе
+            </button>
+            <button
+              onClick={() => setActiveTab('premium')}
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                activeTab === 'premium' ? 'text-primary' : 'text-muted-foreground'
+              }`}
+            >
+              Премиум
             </button>
             <button
               onClick={() => setActiveTab('profile')}
@@ -115,6 +125,15 @@ const Index = () => {
                     >
                       <Icon name="Info" size={20} />
                       <span className="font-medium">О сервисе</span>
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('premium'); setMobileMenuOpen(false); }}
+                      className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                        activeTab === 'premium' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary'
+                      }`}
+                    >
+                      <Icon name="Crown" size={20} />
+                      <span className="font-medium">Премиум</span>
                     </button>
                     <button
                       onClick={() => { setActiveTab('profile'); setMobileMenuOpen(false); }}
@@ -221,29 +240,38 @@ const Index = () => {
               <Card className="p-4 md:p-6">
                 <h3 className="text-lg md:text-xl font-semibold mb-4">Доступные серверы</h3>
                 <div className="space-y-2">
-                  {servers.map((server) => (
-                    <button
-                      key={server.id}
-                      onClick={() => setSelectedServer(server)}
-                      className={`w-full p-3 rounded-lg transition-all active:scale-[0.98] ${
-                        selectedServer.id === server.id
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-secondary/50 hover:bg-secondary'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="text-2xl">{server.flag}</div>
-                        <div className="flex-1 text-left">
-                          <p className="font-medium">{server.name}</p>
-                          <p className="text-xs opacity-75">{server.country}</p>
+                  {servers.map((server) => {
+                    const isLocked = server.isPremium && !hasPremium;
+                    return (
+                      <button
+                        key={server.id}
+                        onClick={() => !isLocked && setSelectedServer(server)}
+                        disabled={isLocked}
+                        className={`w-full p-3 rounded-lg transition-all active:scale-[0.98] relative ${
+                          selectedServer.id === server.id
+                            ? 'bg-primary text-primary-foreground'
+                            : isLocked
+                            ? 'bg-secondary/30 opacity-60 cursor-not-allowed'
+                            : 'bg-secondary/50 hover:bg-secondary'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="text-2xl">{server.flag}</div>
+                          <div className="flex-1 text-left">
+                            <p className="font-medium flex items-center gap-2">
+                              {server.name}
+                              {isLocked && <Icon name="Lock" size={14} />}
+                            </p>
+                            <p className="text-xs opacity-75">{server.country}</p>
+                          </div>
+                          <div className="text-right text-sm">
+                            <p>{server.ping} мс</p>
+                            <p className="text-xs opacity-75">{server.load}%</p>
+                          </div>
                         </div>
-                        <div className="text-right text-sm">
-                          <p>{server.ping} мс</p>
-                          <p className="text-xs opacity-75">{server.load}%</p>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
               </Card>
             </div>
@@ -262,6 +290,17 @@ const Index = () => {
                   <p className="text-lg md:text-xl text-muted-foreground">
                     Быстрый и безопасный VPN для защиты вашей приватности
                   </p>
+                  <a 
+                    href="https://t.me/flyagvpn" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 mt-4 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-colors"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18.717-.962 3.792-1.362 5.032-.168.525-.5.7-.82.717-.697.063-1.226-.46-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.248-.024c-.106.024-1.793 1.139-5.062 3.345-.479.329-.913.489-1.302.481-.428-.009-1.252-.242-1.865-.442-.752-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.121.099.155.232.171.326.016.094.036.308.02.475z"/>
+                    </svg>
+                    Наш Telegram-канал
+                  </a>
                 </div>
 
                 <div className="grid md:grid-cols-3 gap-4 md:gap-6 pt-6 md:pt-8">
@@ -371,16 +410,6 @@ const Index = () => {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
                       <div>
-                        <p className="font-medium">Kill Switch</p>
-                        <p className="text-sm text-muted-foreground">
-                          Автоматическая защита при разрыве
-                        </p>
-                      </div>
-                      <Switch defaultChecked />
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
-                      <div>
                         <p className="font-medium">Автоподключение</p>
                         <p className="text-sm text-muted-foreground">
                           Подключаться при запуске
@@ -412,6 +441,162 @@ const Index = () => {
                 </div>
               </Card>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'premium' && (
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Получите Premium доступ</h2>
+              <p className="text-lg text-muted-foreground">Разблокируйте все сервера и получите максимальную скорость</p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card className="p-6 hover:shadow-xl transition-shadow">
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto">
+                    <Icon name="Calendar" size={32} className="text-primary" />
+                  </div>
+                  <h3 className="text-2xl font-bold">1 месяц</h3>
+                  <div className="py-4">
+                    <p className="text-4xl font-bold">299₽</p>
+                    <p className="text-sm text-muted-foreground mt-1">в месяц</p>
+                  </div>
+                  <ul className="space-y-2 text-sm text-left">
+                    <li className="flex items-center gap-2">
+                      <Icon name="Check" size={16} className="text-primary" />
+                      Все сервера доступны
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Icon name="Check" size={16} className="text-primary" />
+                      Безлимитный трафик
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Icon name="Check" size={16} className="text-primary" />
+                      Максимальная скорость
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Icon name="Check" size={16} className="text-primary" />
+                      Приоритетная поддержка
+                    </li>
+                  </ul>
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={() => setHasPremium(true)}
+                  >
+                    Выбрать
+                  </Button>
+                </div>
+              </Card>
+
+              <Card className="p-6 border-2 border-primary relative hover:shadow-2xl transition-shadow">
+                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  Популярно
+                </Badge>
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center mx-auto">
+                    <Icon name="Zap" size={32} className="text-primary-foreground" />
+                  </div>
+                  <h3 className="text-2xl font-bold">6 месяцев</h3>
+                  <div className="py-4">
+                    <p className="text-4xl font-bold">1499₽</p>
+                    <p className="text-sm text-muted-foreground mt-1">250₽ в месяц</p>
+                    <Badge variant="secondary" className="mt-2">Экономия 16%</Badge>
+                  </div>
+                  <ul className="space-y-2 text-sm text-left">
+                    <li className="flex items-center gap-2">
+                      <Icon name="Check" size={16} className="text-primary" />
+                      Все сервера доступны
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Icon name="Check" size={16} className="text-primary" />
+                      Безлимитный трафик
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Icon name="Check" size={16} className="text-primary" />
+                      Максимальная скорость
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Icon name="Check" size={16} className="text-primary" />
+                      Приоритетная поддержка
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Icon name="Crown" size={16} className="text-primary" />
+                      Эксклюзивные сервера
+                    </li>
+                  </ul>
+                  <Button 
+                    className="w-full"
+                    onClick={() => setHasPremium(true)}
+                  >
+                    Выбрать
+                  </Button>
+                </div>
+              </Card>
+
+              <Card className="p-6 hover:shadow-xl transition-shadow">
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto">
+                    <Icon name="Trophy" size={32} className="text-primary" />
+                  </div>
+                  <h3 className="text-2xl font-bold">12 месяцев</h3>
+                  <div className="py-4">
+                    <p className="text-4xl font-bold">2499₽</p>
+                    <p className="text-sm text-muted-foreground mt-1">208₽ в месяц</p>
+                    <Badge variant="secondary" className="mt-2">Экономия 30%</Badge>
+                  </div>
+                  <ul className="space-y-2 text-sm text-left">
+                    <li className="flex items-center gap-2">
+                      <Icon name="Check" size={16} className="text-primary" />
+                      Все сервера доступны
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Icon name="Check" size={16} className="text-primary" />
+                      Безлимитный трафик
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Icon name="Check" size={16} className="text-primary" />
+                      Максимальная скорость
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Icon name="Check" size={16} className="text-primary" />
+                      Приоритетная поддержка
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Icon name="Crown" size={16} className="text-primary" />
+                      Эксклюзивные сервера
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Icon name="Star" size={16} className="text-primary" />
+                      VIP поддержка 24/7
+                    </li>
+                  </ul>
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={() => setHasPremium(true)}
+                  >
+                    Выбрать
+                  </Button>
+                </div>
+              </Card>
+            </div>
+
+            <Card className="mt-8 p-6 bg-primary/10 border-primary/20">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+                    <Icon name="Gift" size={24} className="text-primary-foreground" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Получите 7 дней бесплатно</h3>
+                    <p className="text-sm text-muted-foreground">При покупке любого тарифа на 6+ месяцев</p>
+                  </div>
+                </div>
+                <Badge className="text-base px-4 py-2">Акция</Badge>
+              </div>
+            </Card>
           </div>
         )}
       </main>
