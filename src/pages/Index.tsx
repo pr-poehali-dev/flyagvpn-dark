@@ -532,7 +532,7 @@ const Index = () => {
                       <Switch defaultChecked />
                     </div>
                   </div>
-                </div>"}
+                </div>
               </Card>
             </div>
           </div>
